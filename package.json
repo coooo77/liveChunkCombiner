@@ -1,0 +1,19 @@
+{
+  "name": "live-chunk-combiner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "single": "npx tsx ./src/single",
+    "dev": "npx tsx ./src/index",
+    "build": "npx tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.13.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5.4.5"
+  }
+}
