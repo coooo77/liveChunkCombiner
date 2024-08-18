@@ -53,7 +53,11 @@ export async function combineChunks(checkFolders: string[]) {
           continue
         }
 
-        const preFileDate = extractDateFromFilename(preFile) as Date
+        const preFileDate = extractDateFromFilename(preFile)
+        if (!preFileDate) {
+          errorFiles.push(file)
+          continue
+        }
         if (fileDate.getTime() === preFileDate.getTime()) {
           // 合併的檔案 直接移動到 single
           singleFiles.add(file)

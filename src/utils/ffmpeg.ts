@@ -30,10 +30,14 @@ export function combineVideos(filePaths: string[], exportFolder: string) {
   const listPath = makeCombineList(filePaths)
   const exportPath = path.join(exportFolder, `${name}_combine${ext}`)
 
-  cp.execSync(`ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
-  // 想要跳出視窗就 + start
-  // cp.execSync(`start ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
-  fs.unlinkSync(listPath)
+  try {
+    cp.execSync(`ffmpeg -v error -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
+    // 想要跳出視窗就 + start
+    // cp.execSync(`start ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
+    fs.unlinkSync(listPath)
+  } catch (error) {
+    console.error(error)
+  }
 }
 
 export function getMediaDuration(filePath: string, showInSeconds: false): string | null
