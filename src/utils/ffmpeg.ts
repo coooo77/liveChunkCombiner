@@ -35,10 +35,10 @@ export async function combineVideos(filePaths: string[], exportFolder: string) {
     let count = 0
     let listTxtFileIsExist = fs.existsSync(listPath)
 
-    while (!listTxtFileIsExist || count++ <= 10) {
+    while (!listTxtFileIsExist) {
       await wait(1)
       listTxtFileIsExist = fs.existsSync(listPath)
-      if (count === 10) throw new Error(`combine list ${listPath} not found`)
+      if (count++ === 10) throw new Error(`combine list ${listPath} not found`)
     }
 
     cp.execSync(`ffmpeg -v error -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
