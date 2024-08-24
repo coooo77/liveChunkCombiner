@@ -144,7 +144,7 @@ export async function combineChunks(checkFolders: string[]) {
 
       list.forEach((file) => moveFile(file, combineInputFolder, sourceExportFolder))
       const filesWithFullPath = sortFileByFileDate(list).map((file) => path.join(sourceExportFolder, file))
-      combineVideos(filesWithFullPath, combineExportFolder)
+      await combineVideos(filesWithFullPath, combineExportFolder)
     }
 
     console.log('done ...')

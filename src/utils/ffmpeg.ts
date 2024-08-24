@@ -3,6 +3,7 @@
 import fs from 'fs'
 import path from 'path'
 import cp from 'child_process'
+import { wait } from './helper'
 
 export function makeCombineList(filePaths: string[]) {
   if (filePaths.length === 0) throw Error('No file paths')
@@ -16,7 +17,7 @@ export function makeCombineList(filePaths: string[]) {
   return listPath
 }
 
-export function combineVideos(filePaths: string[], exportFolder: string) {
+export async function combineVideos(filePaths: string[], exportFolder: string) {
   const [firstFile] = filePaths
   if (firstFile.length === 1 || !firstFile) {
     throw Error(`Invalid file path: ${filePaths}`)
@@ -31,6 +32,15 @@ export function combineVideos(filePaths: string[], exportFolder: string) {
   const exportPath = path.join(exportFolder, `${name}_combine${ext}`)
 
   try {
+    let count = 0
+    let listTxtFileIsExist = fs.existsSync(listPath)
+
+    while (!listTxtFileIsExist || count++ <= 10) {
+      await wait(1)
+      listTxtFileIsExist = fs.existsSync(listPath)
+      if (count === 10) throw new Error(`combine list ${listPath} not found`)
+    }
+
     cp.execSync(`ffmpeg -v error -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
     // 想要跳出視窗就 + start
     // cp.execSync(`start ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
