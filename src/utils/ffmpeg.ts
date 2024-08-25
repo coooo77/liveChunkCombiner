@@ -3,18 +3,29 @@
 import fs from 'fs'
 import path from 'path'
 import cp from 'child_process'
+import { promisify } from 'util'
 import { wait } from './helper'
 
-export function makeCombineList(filePaths: string[]) {
-  if (filePaths.length === 0) throw Error('No file paths')
+const writeFileAsync = promisify(fs.writeFile)
 
-  const [firstFile] = filePaths
-  const { dir: sourceDir, name } = path.parse(firstFile)
-  const listPath = path.join(sourceDir, `${name}_${Date.now()}.txt`)
-  const listContent = filePaths.map((f) => `file ${f.split('\\').join('/')}`).join('\r\n')
+export function makeCombineList(filePaths: string[]): Promise<string> {
+  return new Promise(async (resolve, reject) => {
+    if (filePaths.length === 0) {
+      return reject(new Error('No file paths'))
+    }
 
-  fs.writeFileSync(listPath, listContent)
-  return listPath
+    const [firstFile] = filePaths
+    const { dir: sourceDir, name } = path.parse(firstFile)
+    const listPath = path.join(sourceDir, `${name}_${Date.now()}.txt`)
+    const listContent = filePaths.map((f) => `file ${f.split(path.sep).join('/')}`).join('\r\n')
+
+    try {
+      await writeFileAsync(listPath, listContent)
+      resolve(listPath)
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
 export async function combineVideos(filePaths: string[], exportFolder: string) {
@@ -28,25 +39,20 @@ export async function combineVideos(filePaths: string[], exportFolder: string) {
   }
 
   const { name, ext, dir } = path.parse(firstFile)
-  const listPath = makeCombineList(filePaths)
-  const exportPath = path.join(exportFolder, `${name}_combine${ext}`)
+
+  let listPath
 
   try {
-    let count = 0
-    let listTxtFileIsExist = fs.existsSync(listPath)
-
-    while (!listTxtFileIsExist) {
-      await wait(1)
-      listTxtFileIsExist = fs.existsSync(listPath)
-      if (count++ === 10) throw new Error(`combine list ${listPath} not found`)
-    }
+    listPath = await makeCombineList(filePaths)
+    const exportPath = path.join(exportFolder, `${name}_combine${ext}`)
 
     cp.execSync(`ffmpeg -v error -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
     // 想要跳出視窗就 + start
     // cp.execSync(`start ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
-    fs.unlinkSync(listPath)
   } catch (error) {
     console.error(error)
+  } finally {
+    if (listPath && fs.existsSync(listPath)) fs.unlinkSync(listPath)
   }
 }
 
