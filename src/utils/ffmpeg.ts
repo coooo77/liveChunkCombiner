@@ -44,6 +44,16 @@ export async function combineVideos(filePaths: string[], exportFolder: string) {
 
   try {
     listPath = await makeCombineList(filePaths)
+
+    let count = 0
+    let isListExist = fs.existsSync(listPath)
+
+    while (!isListExist) {
+      await wait(1)
+      isListExist = fs.existsSync(listPath)
+      if (count++ > 10) throw new Error(`${listPath} is unavailable!`)
+    }
+
     const exportPath = path.join(exportFolder, `${name}_combine${ext}`)
 
     cp.execSync(`ffmpeg -v error -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
