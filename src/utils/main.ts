@@ -167,6 +167,14 @@ export async function combineChunks(checkFolders: string[]) {
         return acc
       }, [] as string[])
 
+      if (combineList.length === 0) continue
+
+      if (combineList.length === 1) {
+        const singleFileFolder = mDINE(path.join(folder, 'chunk/single'))
+        combineList.forEach((f) => moveFile(f, combineInputFolder, singleFileFolder))
+        continue
+      }
+
       combineList.forEach((file) => moveFile(file, combineInputFolder, sourceExportFolder))
       const filesWithFullPath = sortFileByFileDate(combineList).map((file) => path.join(sourceExportFolder, file))
       await combineVideos(filesWithFullPath, combineExportFolder)
