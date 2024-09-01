@@ -25,27 +25,51 @@ export async function combineChunks(checkFolders: string[]) {
     const errorFiles: string[] = []
     const combineFiles: string[][] = []
     const singleFiles = new Set<string>()
+    const videoInfoMap = new Map<string, { duration: number; date: Date }>()
+    const videosByNameMap = new Map<string, string[]>()
 
-    // 檢查是否有斷片
-    for (const [_, files] of videoGroupByName) {
+    debugger
+
+    for (const [userName, files] of videoGroupByName) {
       if (files.length < 2) {
         files.forEach((f) => singleFiles.add(f))
         continue
       }
 
+      // 確認檔案有日期、時間資料可用
+      for (const file of files) {
+        const fileDate = extractDateFromFilename(file)
+        if (fileDate === null) {
+          errorFiles.push(file)
+          debugger
+          continue
+        }
+
+        const fileDuration = getMediaDuration(path.join(folder, file), true)
+        if (fileDuration === null) {
+          errorFiles.push(file)
+          debugger
+          continue
+        }
+
+        videoInfoMap.set(file, {
+          date: fileDate,
+          duration: fileDuration,
+        })
+
+        const videos = videosByNameMap.get(userName) || []
+        videosByNameMap.set(userName, videos.concat(file))
+      }
+    }
+
+    for (const [_, files] of videosByNameMap) {
+      const acc: string[] = []
       const fileSorted = sortFileByFileDate(files)
 
-      const acc: string[] = []
-
+      // 檢查是否有斷片
       for (let i = 0; i < fileSorted.length; i++) {
         const file = fileSorted[i]
         console.log('check file:', file)
-
-        const fileDate = extractDateFromFilename(file)
-        if (!fileDate) {
-          errorFiles.push(file)
-          continue
-        }
 
         const preFile = acc.at(-1)
         if (!preFile) {
@@ -53,28 +77,19 @@ export async function combineChunks(checkFolders: string[]) {
           continue
         }
 
-        const preFileDate = extractDateFromFilename(preFile)
-        if (!preFileDate) {
-          errorFiles.push(file)
-          continue
-        }
-        if (fileDate.getTime() === preFileDate.getTime()) {
+        const fileInfo = videoInfoMap.get(file)
+        const preFileInfo = videoInfoMap.get(preFile)
+
+        if (fileInfo!.date.getTime() === preFileInfo!.date.getTime()) {
           // 合併的檔案 直接移動到 single
           singleFiles.add(file)
           singleFiles.add(preFile)
           continue
         }
 
-        const preFileDuration = getMediaDuration(path.join(folder, preFile), true)
-        if (preFileDuration === null) {
-          errorFiles.push(preFile)
-          acc.push(file)
-          continue
-        }
-
         // 注意一下因為合併的影片是用 4X 壓縮的，所以時間還原要 4X，但一般影片不需要
-        const postFileTime = fileDate.getTime()
-        const preFileTime = preFileDate.getTime() + preFileDuration * 1000 * 4
+        const postFileTime = fileInfo!.date.getTime()
+        const preFileTime = preFileInfo!.date.getTime() + preFileInfo!.duration * 1000 * 4
         const shouldBreak = postFileTime - preFileTime >= distanceBetweenStreamsInMs
 
         if (!shouldBreak) {
@@ -101,14 +116,12 @@ export async function combineChunks(checkFolders: string[]) {
       }
 
       // loop 結束，檢查 acc 是否還有斷片
-      if (acc.length) {
-        if (acc.length === 1) {
-          const [singleFile] = acc
-          singleFiles.add(singleFile)
-        } else {
-          const clone = [...acc]
-          combineFiles.push(clone)
-        }
+      if (acc.length === 1) {
+        const [singleFile] = acc
+        singleFiles.add(singleFile)
+      } else {
+        const clone = [...acc]
+        combineFiles.push(clone)
       }
     }
 

@@ -28,7 +28,7 @@ export function makeCombineList(filePaths: string[]): Promise<string> {
   })
 }
 
-export async function combineVideos(filePaths: string[], exportFolder: string) {
+export async function combineVideos(filePaths: string[], exportFolder: string, retryCount: number = 0) {
   const [firstFile] = filePaths
   if (firstFile.length === 1 || !firstFile) {
     throw Error(`Invalid file path: ${filePaths}`)
@@ -49,7 +49,8 @@ export async function combineVideos(filePaths: string[], exportFolder: string) {
     let isListExist = fs.existsSync(listPath)
 
     while (!isListExist) {
-      await wait(1)
+      console.log(`no combine list found.., retry ${count} times`)
+      await wait(2)
       isListExist = fs.existsSync(listPath)
       if (count++ > 10) throw new Error(`${listPath} is unavailable!`)
     }
@@ -61,6 +62,12 @@ export async function combineVideos(filePaths: string[], exportFolder: string) {
     // cp.execSync(`start ffmpeg -f concat -safe 0 -i ${listPath} -y -c copy ${exportPath}`, { cwd: dir })
   } catch (error) {
     console.error(error)
+    retryCount++
+
+    if (retryCount > 3) return
+
+    console.log(`combine task failed, retry ${retryCount} times`)
+    await combineVideos(filePaths, exportFolder, retryCount)
   } finally {
     if (listPath && fs.existsSync(listPath)) fs.unlinkSync(listPath)
   }
