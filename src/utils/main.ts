@@ -6,7 +6,7 @@ import {
   moveFile,
   combineVideos,
   getFilesByExt,
-  getMediaDuration,
+  retryGetDuration,
   sortFileByFileDate,
   groupVideosByUserName,
   extractDateFromFilename,
@@ -45,7 +45,7 @@ export async function combineChunks(checkFolders: string[]) {
           continue
         }
 
-        const fileDuration = getMediaDuration(path.join(folder, file), true)
+        const fileDuration = retryGetDuration(path.join(folder, file))
         if (fileDuration === null) {
           errorFiles.push(file)
           console.log(`failed to extract duration from file ${file}`)

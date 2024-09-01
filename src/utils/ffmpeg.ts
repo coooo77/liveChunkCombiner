@@ -91,3 +91,17 @@ export function getMediaDuration(filePath: string, showInSeconds: boolean) {
     return null
   }
 }
+
+export function retryGetDuration(filePath: string, retryCount = 0, max = 5): number | null {
+  try {
+    const result = getMediaDuration(filePath, true)
+    return result
+  } catch (error) {
+    retryCount++
+
+    if (retryCount < max) return retryGetDuration(filePath, retryCount, max)
+
+    console.log(`Cannot get duration from ${filePath}`)
+    return null
+  }
+}
