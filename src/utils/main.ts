@@ -45,7 +45,7 @@ export async function combineChunks(checkFolders: string[]) {
           continue
         }
 
-        const fileDuration = retryGetDuration(path.join(folder, file))
+        const fileDuration = await retryGetDuration(path.join(folder, file))
         if (fileDuration === null) {
           errorFiles.push(file)
           console.log(`failed to extract duration from file ${file}`)

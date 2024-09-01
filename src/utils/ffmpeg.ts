@@ -92,16 +92,19 @@ export function getMediaDuration(filePath: string, showInSeconds: boolean) {
   }
 }
 
-export function retryGetDuration(filePath: string, retryCount = 0, max = 5): number | null {
+export async function retryGetDuration(filePath: string, retryCount = 0, max = 5): Promise<number | null> {
   try {
     const result = getMediaDuration(filePath, true)
+    if (result === null) throw Error(`Cannot get duration from ${filePath}`)
     return result
   } catch (error) {
     retryCount++
+    console.log(`fail to get duration from ${filePath}, retry ${retryCount} times ...`)
+    await wait(1)
 
     if (retryCount < max) return retryGetDuration(filePath, retryCount, max)
 
-    console.log(`Cannot get duration from ${filePath}`)
+    console.log(error)
     return null
   }
 }
