@@ -41,14 +41,14 @@ export async function combineChunks(checkFolders: string[]) {
         const fileDate = extractDateFromFilename(file)
         if (fileDate === null) {
           errorFiles.push(file)
-          debugger
+          console.log(`failed to extract date from file ${file}`)
           continue
         }
 
         const fileDuration = getMediaDuration(path.join(folder, file), true)
         if (fileDuration === null) {
           errorFiles.push(file)
-          debugger
+          console.log(`failed to extract duration from file ${file}`)
           continue
         }
 
