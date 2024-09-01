@@ -116,12 +116,14 @@ export async function combineChunks(checkFolders: string[]) {
       }
 
       // loop 結束，檢查 acc 是否還有斷片
-      if (acc.length === 1) {
-        const [singleFile] = acc
-        singleFiles.add(singleFile)
-      } else {
-        const clone = [...acc]
-        combineFiles.push(clone)
+      if (acc.length) {
+        if (acc.length === 1) {
+          const [singleFile] = acc
+          singleFiles.add(singleFile)
+        } else {
+          const clone = [...acc]
+          combineFiles.push(clone)
+        }
       }
     }
 
