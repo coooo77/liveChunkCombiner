@@ -6,6 +6,7 @@
   "scripts": {
     "single": "npx tsx ./src/single",
     "dev": "npx tsx ./src/index",
+    "bat": "node ./dist/createBat.js",
     "build": "npx tsc"
   },
   "keywords": [],
