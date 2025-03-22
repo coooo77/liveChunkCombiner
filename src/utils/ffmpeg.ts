@@ -83,7 +83,7 @@ export function getMediaDuration(filePath: string, showInSeconds: boolean) {
     }
     command += ` ${filePath}`
 
-    const stdout = cp.execSync(command, { timeout: 2000 }).toString()
+    const stdout = cp.execSync(command, { timeout: 60 * 1000 }).toString()
 
     return showInSeconds ? parseFloat(stdout) : stdout
   } catch (error) {
